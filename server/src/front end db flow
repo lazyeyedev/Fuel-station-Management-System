@@ -1,0 +1,35 @@
+shifts
+ ├── id
+ ├── station_id
+ ├── shift_date
+ ├── shift_type
+ └── status
+
+shift_assignments
+ ├── id
+ ├── shift_id
+ ├── attendant_id
+ └── ...
+
+
+                     GOIL FUEL MANAGER
+                           │
+              ┌────────────┴────────────┐
+              │                         │
+          FRONTEND                    BACKEND
+        React/Vite                  Express/TS
+        :5173                         :5000
+              │                         │
+              │       HTTP/JSON         │
+              └────────────►────────────┘
+                                        │
+                                    mysql2/promise
+                                        │
+                                        ▼
+                               fuel_station_db
+                                        │
+                    ┌───────────────────┼───────────────────┐
+                    │                   │                   │
+                  shifts       shift_assignments       attendants
+                    │                   │                   │
+                    └───────────────────┴───────────────────┘
