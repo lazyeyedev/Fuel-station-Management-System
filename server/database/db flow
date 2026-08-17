@@ -1,0 +1,46 @@
+                         STATION
+                            │
+          ┌─────────────────┼─────────────────┐
+          │                 │                 │
+       USERS             PUMPS              TANKS
+          │                 │                 │
+       ATTENDANTS        NOZZLES          FUEL TYPES
+          │                 │
+          └─────── SHIFTS ──┘
+                    │
+                    ▼
+             PUMP READINGS
+                    │
+                    ▼
+                  SALES
+                    │
+          ┌─────────┼─────────┐
+          ▼         ▼         ▼
+       PAYMENTS  EXPENSES   CREDIT
+
+       And Inventory:
+       FUEL RECEIPT
+      │
+      ▼
+RECEIPT ITEMS
+      │
+      ▼
+    TANK
+      │
+      ▼
+TANK READINGS
+
+eg:
+Opening tank stock
+       +
+Fuel delivered
+       -
+Fuel sold
+       =
+Expected tank stock
+then:
+Expected tank stock
+       -
+Actual tank dip
+       =
+Tank variance
