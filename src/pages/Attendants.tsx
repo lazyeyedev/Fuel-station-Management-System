@@ -13,20 +13,26 @@ export default function Attendants() {
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [formError, setFormError] = useState("");
 
   useEffect(() => {
     loadAttendants(1);
   }, [loadAttendants]);
 
   async function handleAddAttendant() {
-    if (!name.trim()) return;
+    if (!name.trim()) {
+      setFormError("Enter the attendant's full name first.");
+      return;
+    }
+
+    setFormError("");
 
     try {
       await addAttendant(name.trim(), phone.trim());
       setName("");
       setPhone("");
-    } catch {
-      // error state already set in the store
+    } catch (err) {
+      console.error("Add attendant failed:", err);
     }
   }
 
@@ -52,6 +58,12 @@ export default function Attendants() {
           Manage filling station attendants.
         </p>
       </div>
+
+      {formError && (
+        <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-yellow-300">
+          {formError}
+        </div>
+      )}
 
       {error && (
         <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-red-300">

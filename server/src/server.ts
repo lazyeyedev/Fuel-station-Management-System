@@ -22,6 +22,12 @@ app.use(
 
 app.use(express.json());
 
+// temporary request logger: shows every request hitting the backend
+app.use((req, _res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+
 /* =========================
    ROUTES
 ========================= */
