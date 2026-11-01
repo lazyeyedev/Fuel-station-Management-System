@@ -1,21 +1,43 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStationStore } from "../store/stationStore";
 
 export default function Attendants() {
   const attendants = useStationStore((state) => state.attendants);
+  const loading = useStationStore((state) => state.loading);
+  const saving = useStationStore((state) => state.saving);
+  const error = useStationStore((state) => state.error);
+
+  const loadAttendants = useStationStore((state) => state.loadAttendants);
   const addAttendant = useStationStore((state) => state.addAttendant);
   const removeAttendant = useStationStore((state) => state.removeAttendant);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
 
-  function handleAddAttendant() {
+  useEffect(() => {
+    loadAttendants(1);
+  }, [loadAttendants]);
+
+  async function handleAddAttendant() {
     if (!name.trim()) return;
 
-    addAttendant(name, phone);
+    try {
+      await addAttendant(name.trim(), phone.trim());
+      setName("");
+      setPhone("");
+    } catch {
+      // error state already set in the store
+    }
+  }
 
-    setName("");
-    setPhone("");
+  async function handleRemoveAttendant(id: number) {
+    if (!window.confirm("Remove this attendant?")) return;
+
+    try {
+      await removeAttendant(id);
+    } catch {
+      // error state already set in the store
+    }
   }
 
   return (
@@ -31,100 +53,134 @@ export default function Attendants() {
         </p>
       </div>
 
+      {error && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-red-300">
+          {error}
+        </div>
+      )}
+
       <div className="grid grid-cols-3 gap-4">
 
         <input
           placeholder="Full Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="rounded-xl bg-[#171C22] p-3 text-white"
+          disabled={saving}
+          className="rounded-xl bg-[#171C22] p-3 text-white disabled:opacity-50"
         />
 
         <input
           placeholder="Phone Number"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          className="rounded-xl bg-[#171C22] p-3 text-white"
+          disabled={saving}
+          className="rounded-xl bg-[#171C22] p-3 text-white disabled:opacity-50"
         />
 
         <button
           onClick={handleAddAttendant}
-          className="rounded-xl bg-green-600 font-semibold text-white hover:bg-green-500"
+          disabled={saving}
+          className="rounded-xl bg-green-600 font-semibold text-white hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Add Attendant
+          {saving ? "Saving..." : "Add Attendant"}
         </button>
 
       </div>
 
-      <table className="w-full">
+      {loading ? (
 
-        <thead>
+        <div className="py-12 text-center text-gray-400">
+          Loading attendants...
+        </div>
 
-          <tr className="border-b border-gray-700">
+      ) : attendants.length === 0 ? (
 
-            <th className="py-3 text-left text-gray-400">
-              Name
-            </th>
+        <p className="text-gray-400">
+          No attendants registered yet.
+        </p>
 
-            <th className="text-left text-gray-400">
-              Phone
-            </th>
+      ) : (
 
-            <th className="text-left text-gray-400">
-              Status
-            </th>
+        <table className="w-full">
 
-            <th className="text-right text-gray-400">
-              Action
-            </th>
+          <thead>
 
-          </tr>
+            <tr className="border-b border-gray-700">
 
-        </thead>
+              <th className="py-3 text-left text-gray-400">
+                Name
+              </th>
 
-        <tbody>
+              <th className="text-left text-gray-400">
+                Phone
+              </th>
 
-          {attendants.map((person) => (
+              <th className="text-left text-gray-400">
+                Status
+              </th>
 
-            <tr
-              key={person.id}
-              className="border-b border-gray-800"
-            >
-
-              <td className="py-4 text-white">
-                {person.name}
-              </td>
-
-              <td className="text-gray-300">
-                {person.phone || "-"}
-              </td>
-
-              <td>
-
-                <span className="rounded-full bg-green-600 px-3 py-1 text-sm text-white">
-                  {person.active ? "Active" : "Inactive"}
-                </span>
-
-              </td>
-
-              <td className="text-right">
-
-                <button
-                  onClick={() => removeAttendant(person.id)}
-                  className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-500"
-                >
-                  Remove
-                </button>
-
-              </td>
+              <th className="text-right text-gray-400">
+                Action
+              </th>
 
             </tr>
 
-          ))}
+          </thead>
 
-        </tbody>
+          <tbody>
 
-      </table>
+            {attendants.map((person) => (
+
+              <tr
+                key={person.id}
+                className="border-b border-gray-800"
+              >
+
+                <td className="py-4 text-white">
+                  {person.name}
+                </td>
+
+                <td className="text-gray-300">
+                  {person.phone || "-"}
+                </td>
+
+                <td>
+
+                  <span
+                    className={`rounded-full px-3 py-1 text-sm text-white ${
+                      person.active
+                        ? "bg-green-600"
+                        : "bg-gray-600"
+                    }`}
+                  >
+                    {person.active ? "Active" : "Inactive"}
+                  </span>
+
+                </td>
+
+                <td className="text-right">
+
+                  {person.active && (
+                    <button
+                      onClick={() => handleRemoveAttendant(person.id)}
+                      disabled={saving}
+                      className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Remove
+                    </button>
+                  )}
+
+                </td>
+
+              </tr>
+
+            ))}
+
+          </tbody>
+
+        </table>
+
+      )}
 
     </div>
   );

@@ -1,5 +1,12 @@
 import { create } from "zustand";
 
+import {
+  getAttendants,
+  createAttendant as apiCreateAttendant,
+  deactivateAttendant as apiDeactivateAttendant,
+  type Attendant as ApiAttendant,
+} from "../api";
+
 export interface Attendant {
   id: number;
   name: string;
@@ -17,46 +24,113 @@ interface StationStore {
 
   assignments: NozzleAssignment[];
 
-  addAttendant: (name: string, phone: string) => void;
+  loading: boolean;
+  saving: boolean;
+  error: string;
 
-  removeAttendant: (id: number) => void;
+  loadAttendants: (stationId?: number) => Promise<void>;
+
+  addAttendant: (name: string, phone: string) => Promise<void>;
+
+  removeAttendant: (id: number) => Promise<void>;
 
   saveAssignments: (data: NozzleAssignment[]) => void;
 }
 
+function mapAttendant(a: ApiAttendant): Attendant {
+  return {
+    id: a.id,
+    name: a.full_name,
+    phone: a.phone || "",
+    active: a.active,
+  };
+}
+
 export const useStationStore = create<StationStore>((set) => ({
 
-  attendants: [
-    { id: 1, name: "Joseph", phone: "", active: true },
-    { id: 2, name: "Zainabu", phone: "", active: true },
-    { id: 3, name: "Comfort", phone: "", active: true },
-    { id: 4, name: "Noah", phone: "", active: true },
-    { id: 5, name: "Francis", phone: "", active: true },
-    { id: 6, name: "Owusu", phone: "", active: true },
-    { id: 7, name: "Jesus Lina", phone: "", active: true },
-  ],
+  attendants: [],
 
   assignments: [],
 
-  addAttendant: (name, phone) =>
-    set((state) => ({
-      attendants: [
-        ...state.attendants,
-        {
-          id: Date.now(),
-          name,
-          phone,
-          active: true,
-        },
-      ],
-    })),
+  loading: false,
+  saving: false,
+  error: "",
 
-  removeAttendant: (id) =>
-    set((state) => ({
-      attendants: state.attendants.filter(
-        (a) => a.id !== id
-      ),
-    })),
+  loadAttendants: async (stationId = 1) => {
+    set({ loading: true, error: "" });
+
+    try {
+      const data = await getAttendants(stationId);
+
+      set({
+        attendants: data.map(mapAttendant),
+        loading: false,
+      });
+    } catch (err) {
+      set({
+        error:
+          err instanceof Error
+            ? err.message
+            : "Failed to load attendants",
+        loading: false,
+      });
+    }
+  },
+
+  addAttendant: async (name, phone) => {
+    set({ saving: true, error: "" });
+
+    try {
+      const created = await apiCreateAttendant({
+        stationId: 1,
+        fullName: name,
+        phone: phone || null,
+      });
+
+      set((state) => ({
+        attendants: [
+          ...state.attendants,
+          mapAttendant(created),
+        ],
+        saving: false,
+      }));
+    } catch (err) {
+      set({
+        error:
+          err instanceof Error
+            ? err.message
+            : "Failed to add attendant",
+        saving: false,
+      });
+
+      throw err;
+    }
+  },
+
+  removeAttendant: async (id) => {
+    set({ saving: true, error: "" });
+
+    try {
+      await apiDeactivateAttendant(id);
+
+      set((state) => ({
+        attendants: state.attendants.map((a) =>
+          a.id === id ? { ...a, active: false } : a
+        ),
+        saving: false,
+      }));
+    } catch (err) {
+      set({
+        error:
+          err instanceof Error
+            ? err.message
+            : "Failed to remove attendant",
+        saving: false,
+      });
+
+      throw err;
+    }
+  },
 
   saveAssignments: (data) =>
     set({

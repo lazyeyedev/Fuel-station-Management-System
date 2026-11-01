@@ -120,3 +120,61 @@ export async function createShift(
     body: JSON.stringify(payload),
   });
 }
+
+/* =========================
+   ATTENDANTS
+========================= */
+
+export interface Attendant {
+  id: number;
+  station_id: number;
+  employee_number: string | null;
+  full_name: string;
+  phone: string | null;
+  active: boolean;
+  created_at: string;
+}
+
+export interface CreateAttendantPayload {
+  stationId: number;
+  fullName: string;
+  phone?: string | null;
+  employeeNumber?: string | null;
+}
+
+export async function getAttendants(
+  stationId: number
+): Promise<Attendant[]> {
+  const response = await request<{
+    success: boolean;
+    data: Attendant[];
+  }>(`/attendants?stationId=${stationId}`);
+
+  return response.data;
+}
+
+export async function createAttendant(
+  payload: CreateAttendantPayload
+): Promise<Attendant> {
+  const response = await request<{
+    success: boolean;
+    message: string;
+    data: Attendant;
+  }>("/attendants", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+  return response.data;
+}
+
+export async function deactivateAttendant(
+  id: number
+): Promise<void> {
+  await request<{
+    success: boolean;
+    message: string;
+  }>(`/attendants/${id}/deactivate`, {
+    method: "PATCH",
+  });
+}

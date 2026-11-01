@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import pool from "./config/database";
 import shiftRoutes from "./routes/shiftRoutes";
+import attendantRoutes from "./routes/attendantRoutes";
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use(express.json());
 ========================= */
 
 app.use("/api/shifts", shiftRoutes);
+app.use("/api/attendants", attendantRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.json({

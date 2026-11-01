@@ -1,8 +1,16 @@
+import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
+import { useStationStore } from "../store/stationStore";
 
 export default function AppLayout() {
+  const loadAttendants = useStationStore((s) => s.loadAttendants);
+
+  useEffect(() => {
+    loadAttendants(1);
+  }, [loadAttendants]);
+
   return (
     <div className="flex min-h-screen bg-bg">
 
