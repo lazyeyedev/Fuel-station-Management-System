@@ -42,7 +42,7 @@ function mapAttendant(a: ApiAttendant): Attendant {
     id: a.id,
     name: a.full_name,
     phone: a.phone || "",
-    active: a.active,
+    active: Boolean(a.active),
   };
 }
 
@@ -114,9 +114,7 @@ export const useStationStore = create<StationStore>((set) => ({
       await apiDeactivateAttendant(id);
 
       set((state) => ({
-        attendants: state.attendants.map((a) =>
-          a.id === id ? { ...a, active: false } : a
-        ),
+        attendants: state.attendants.filter((a) => a.id !== id),
         saving: false,
       }));
     } catch (err) {

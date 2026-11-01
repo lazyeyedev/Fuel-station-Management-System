@@ -1,5 +1,6 @@
 import { useDailyStore } from "../store/dailyStore";
 import { useShiftStore } from "../store/shiftStore";
+import { loadDemoData } from "../utils/demoData";
 
 export default function DeveloperTools() {
   const resetDaily = useDailyStore(
@@ -25,6 +26,12 @@ export default function DeveloperTools() {
     alert("Shift reset successfully.");
   }
 
+  function loadDemo() {
+    loadDemoData();
+
+    alert("Demo data loaded into the in-memory stores.");
+  }
+
   return (
     <div className="space-y-6">
 
@@ -41,6 +48,7 @@ export default function DeveloperTools() {
         <div className="mt-8 flex gap-4">
 
           <button
+            onClick={loadDemo}
             className="rounded-xl bg-green-600 px-8 py-4 font-bold text-white hover:bg-green-500"
           >
             Load Demo Data
@@ -59,4 +67,4 @@ export default function DeveloperTools() {
 
     </div>
   );
-} 
+}

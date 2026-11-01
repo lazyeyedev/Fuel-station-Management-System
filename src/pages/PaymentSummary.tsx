@@ -6,6 +6,18 @@ import { useExpenseStore } from "../store/expenseStore";
 import AttendantCard from "../components/payments/AttendantCard";
 import PaymentTotals from "../components/payments/PaymentTotals";
 
+type PaymentField = "cash" | "momo" | "card" | "coupon" | "credit";
+
+type PaymentEntry = Record<PaymentField, string>;
+
+const emptyEntry: PaymentEntry = {
+  cash: "",
+  momo: "",
+  card: "",
+  coupon: "",
+  credit: "",
+};
+
 export default function PaymentSummary() {
   const attendants = useStationStore((s) => s.attendants);
 
@@ -21,33 +33,36 @@ export default function PaymentSummary() {
     (s) => s.expensesByAttendant
   );
 
-  const [payments, setPayments] = useState(
-    attendants.map((a) => ({
-      id: a.id,
-      name: a.name,
-      cash: "",
-      momo: "",
-      card: "",
-      coupon: "",
-      credit: "",
-    }))
+  // Amounts typed by the user, keyed by attendant id. Kept separate from the
+  // attendant list so rows appear as soon as attendants finish loading.
+  const [entries, setEntries] = useState<
+    Record<number, PaymentEntry>
+  >({});
+
+  const payments = useMemo(
+    () =>
+      attendants
+        .filter((a) => a.active)
+        .map((a) => ({
+          id: a.id,
+          name: a.name,
+          ...(entries[a.id] ?? emptyEntry),
+        })),
+    [attendants, entries]
   );
 
   function update(
-    index: number,
-    field:
-      | "cash"
-      | "momo"
-      | "card"
-      | "coupon"
-      | "credit",
+    id: number,
+    field: PaymentField,
     value: string
   ) {
-    const copy = [...payments];
-
-    copy[index][field] = value;
-
-    setPayments(copy);
+    setEntries((current) => ({
+      ...current,
+      [id]: {
+        ...(current[id] ?? emptyEntry),
+        [field]: value,
+      },
+    }));
   }
 
   const totals = useMemo(() => {
@@ -104,7 +119,7 @@ export default function PaymentSummary() {
     );
   }
 
-   return (
+  return (
     <div className="space-y-6">
 
       <div>
@@ -117,9 +132,15 @@ export default function PaymentSummary() {
         </p>
       </div>
 
+      {payments.length === 0 && (
+        <p className="text-gray-400">
+          No active attendants. Add attendants first.
+        </p>
+      )}
+
       <div className="space-y-6">
 
-        {payments.map((row, index) => {
+        {payments.map((row) => {
 
           const nozzles = meterReadings
             .filter(
@@ -148,7 +169,7 @@ export default function PaymentSummary() {
               credit={row.credit}
               onChange={(field, value) =>
                 update(
-                  index,
+                  row.id,
                   field,
                   value
                 )

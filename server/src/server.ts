@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import pool from "./config/database";
 import shiftRoutes from "./routes/shiftRoutes";
 import attendantRoutes from "./routes/attendantRoutes";
+import { runMigrations } from "./db/migrationRunner";
 
 dotenv.config();
 
@@ -67,6 +68,16 @@ app.get("/api/db-test", async (_req, res) => {
 
 const PORT = Number(process.env.PORT) || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Fuel Station API running on http://localhost:${PORT}`);
+async function start() {
+  // Bring the database schema up to date before accepting requests
+  await runMigrations();
+
+  app.listen(PORT, () => {
+    console.log(`Fuel Station API running on http://localhost:${PORT}`);
+  });
+}
+
+start().catch((error) => {
+  console.error("Startup failed:", error);
+  process.exit(1);
 });
